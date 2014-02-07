@@ -50,6 +50,7 @@ NSInteger currentRate = 70;
 - (void)dealloc
 {
     [rateTimer invalidate];
+    [self unsubscribe];
     [self disconnect];
 }
 
@@ -80,6 +81,19 @@ NSInteger currentRate = 70;
     [self.mqttClient disconnect];
 }
 
+- (void)subscribe
+{
+    NSString *alertTopic = [NSString stringWithFormat:kAlertTopic, self.clientID];
+    [self.mqttClient subscribe:alertTopic
+              withQos:0];
+}
+
+- (void)unsubscribe
+{
+    NSString *alertTopic = [NSString stringWithFormat:kAlertTopic, self.clientID];
+    [self.mqttClient unsubscribe:alertTopic];
+}
+
 - (void)send:(NSInteger)rate
 {
     [self.mqttClient publishString:[NSString stringWithFormat:@"%ld", (long)rate]
@@ -94,9 +108,7 @@ NSInteger currentRate = 70;
     didConnect:(NSUInteger)code
 {
     // once connect, subscribe to the client's alerts topic
-    NSString *alertTopic = [NSString stringWithFormat:kAlertTopic, self.clientID];
-    [client subscribe:alertTopic
-              withQos:0];
+    [self subscribe];
 }
 
 - (void)client:(MQTTClient *)client didReceiveMessage:(MQTTMessage *)message
