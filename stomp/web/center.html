@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta content="width=device-width" name="viewport">
+    <meta charset="utf-8">
+    <title>Truck Tracker Control Center</title>
+  </head>
+  <body>
+    <h1>Truck Tracker Control Center</h1>
+      <form id='connect_form'>
+        <fieldset>
+          <label>WebSocket URL</label>
+          <input name=url id='connect_url' value='ws://localhost:61614' type="text">
+          <button id='connect_button' type="submit">Connect</button>
+          <button type="button" id='disconnect_button' disabled>Disconnect</button>
+        </fieldset>
+      </form>
+      <form id="order_form" style="display: none;">
+        <fieldset>
+          <legend>Send order to a truck</legend>
+          Truck: <select id="truckID"></select>
+          <br>
+          Order: <input id='order' size=64 placeholder="type the order to sent to the truck" type="text">
+          <br>
+          <button id='order_submit' type="submit">Send</button>
+        </fieldset>
+      </form>
+      <hr>
+      
+      <div id="map-canvas" style="height:512px; width:100%; padding:0; margin:0">
+      </div>
+
+
+      <!-- Scripts placed at the end of the document so the pages load faster -->
+      <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+      <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+      <script src="https://raw.github.com/jmesnil/stomp-websocket/v2.3.0/lib/stomp.min.js"></script>
+      <script>
+$(document).ready(function() {
+  // the STOMP client
+  var client;
+  // Google map and the trackers to follow the trucks
+  var map, trackers = {};
+
+  function initialize() {
+    var mapOptions = {
+      zoom: 2,
+      center: new google.maps.LatLng(30,0),
+      mapTypeId: google.maps.MapTypeId.ROADMAP
+    };
+    map = new google.maps.Map($("#map-canvas").get(0), mapOptions);
+  }
+
+  // initialize the Google map.
+  google.maps.event.addDomListener(window, 'load', initialize);
+      
+  // show the truckID at the given latitude and longitude
+  function show(truckID, lat, lng) {
+    var position = new google.maps.LatLng(lat, lng);
+    // lazy instantiation of the map
+    if (!map) {
+      create_map(position);
+    }
+    if (trackers[truckID]) {
+      // the tracker is known, we just need to update its position
+      trackers[truckID].marker.setPosition(position);
+    } else {
+      // there is no tracker for this truck yet, let's create it
+      var marker = new google.maps.Marker({
+        position: position,
+        map: map,
+        title: truckID + " is here"});
+      var infowindow = new google.maps.InfoWindow({
+        content: "Truck " + truckID
+      });
+      var tracker = {
+        marker: marker
+      };
+      // add it to the trackers
+      trackers[truckID] = tracker;
+      google.maps.event.addListener(marker, 'click', function() {
+        infowindow.open(map, marker);
+      });
+    }
+  }
+
+  // Connection to the STOMP broker
+  // and subscription to the trucker's position destinations.
+  $('#connect_form').submit(function() {
+    var url = $("#connect_url").val();
+
+    // create the STOMP client
+    client = Stomp.client(url);
+
+    client.connect("", "", function(frame) {
+      client.debug("connected to Stomp");
+      // once the client is connected, subscribe to the truck's position destinations.
+
+      // we use a wildcard destination to register to any
+      // destination that matches this pattern.
+      var destination = "/topic/truck.*.position";
+      client.subscribe(destination, function(message) {
+        // this function is called every time a message is received
+        // create an object from the JSON string contained in the message body
+        var payload = JSON.parse(message.body);
+
+        var truckID = payload.truck;
+        if (!$("#truckID option[value='" + truckID + "']").length) {
+          // if the truck ID is not already in the list of trucks we can send orders to, we add it.
+          $('#truckID').append($('<option>', {value:truckID}).text(truckID));                
+        }
+        // show the truck position on the map
+        show(truckID, payload.lat, payload.lng);
+      });
+    });
+    // disable the connect button
+    $("#connect_button").prop("disabled",true);
+    // enable the disconnect button
+    $("#disconnect_button").prop("disabled",false);
+    // show the form to send orders to the trucks
+    $("#order_form").show();
+    return false;
+  });
+
+  // Send an order to a truck
+  $('#order_form').submit(function() {
+    var truckID = $("#truckID").val();
+    var order = $("#order").val();
+      
+    // sue the truck's queue orders as the destination
+    var destination = "/queue/truck." + truckID + ".orders";
+    // declare the message body as a JSON string
+    var headers = {
+      "content-type": "application/json; charset=utf-8"
+    };
+    var body = JSON.stringify({
+      "order": order
+    })    
+    client.send(destination, headers, body);
+    // reset the order input field
+    $("#order").val("");
+    return false;
+  });
+
+  $('#disconnect_button').click(function() {
+    // disconnect from the broker
+    client.disconnect(function() {
+      // once we are successfully disconnected, clear out all the truck's trackers from the map
+      for (var tracker in trackers) {
+        trackers[tracker].marker.setMap(null);
+      }
+      trackers = {};
+    });
+    $("#truckID").empty();
+    $("#connect_button").prop("disabled",false);
+    $("#disconnect_button").prop("disabled",true);
+    $("#order_form").hide();
+    return false;
+  });
+});
+    </script>
+  </body>
+</html>

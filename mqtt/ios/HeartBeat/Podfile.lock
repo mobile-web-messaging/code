@@ -1,0 +1,14 @@
+PODS:
+  - MQTTKit (0.1.0)
+
+DEPENDENCIES:
+  - MQTTKit (from `https://github.com/jmesnil/MQTTKit.git`)
+
+EXTERNAL SOURCES:
+  MQTTKit:
+    :git: https://github.com/jmesnil/MQTTKit.git
+
+SPEC CHECKSUMS:
+  MQTTKit: b788c2a420487cb95a8b89e02a40a14701b9ba90
+
+COCOAPODS: 0.29.0

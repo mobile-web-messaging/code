@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta content="width=device-width" name="viewport">
+  <meta charset="utf-8">
+  <title>HeartBeat - MQTT Example</title>
+  <link rel="stylesheet" type="text/css" href="http://bgrins.github.com/spectrum/spectrum.css">
+  
+</head>
+<body>
+  <h1>HeartBeat - MQTT Example</h1>
+  
+  <h2>Clients</h2>
+  <ul id="heartbeats">
+  </ul>
+
+  <footer>&copy; 2014 <a href="http://mobile-web-messaging.net">Mobile &amp; Web Messaging</a></footer>
+
+  <script src='mqttws31.js'></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+  <script src="http://omnipotent.net/jquery.sparkline/2.1.2/jquery.sparkline.min.js"></script>
+  <script>
+$(document).ready(function() {
+  var host = "test.mosquitto.org";
+  var port = 80;
+  var clientID = Math.random().toString(12);
+
+  var clients = {};
+
+  var client = new Messaging.Client(host, Number(port), clientID);
+
+  client.onConnectionLost = function(response) {
+    if (response.errorCode !== 0) {
+      alert(client.clientId + ": " + response.errorCode + "\n");
+    }
+  };            
+
+  // subscription callback
+  client.onMessageArrived = function(message) {
+    var clientID = message.destinationName.split("/").pop();
+    var newValue = message.payloadString;
+
+    var values = clients[clientID];
+    // if the clientID is not known, create the UI for it
+    if (!values) {
+      var item = $('#heartbeats').append(
+        $('<li>').attr("id", clientID).append(
+          $('<label>').text(clientID),
+          $('<button>').text("Alert!").click(function() {
+            sendAlert(clientID);
+          }),
+          $('<span>').attr('class', 'rate')
+        )
+      );
+      // create an empty array to hold its values
+      values = [];
+    }    
+    // add the new value at the end of the array
+    values.push(newValue);
+    // keep only the 30 more recent values
+    if (values.length > 30) {
+      values.splice(0,1);      
+    }
+    // put back the updated values in the clients map
+    clients[clientID] = values;
+    // display the values as a sparkline
+    $('#heartbeats #'+ clientID + ' .rate').sparkline(values, {
+      width: values.length * 5,
+      type: 'line',
+      tooltipSuffix: ' beats per minute'
+    });
+  };
+
+  client.connect({onSuccess: function(frame) {
+    // once the client is successfully connected,
+    // subscribe to all the heart rate topics
+    client.subscribe("/MQTTMWM/HeartRate/+");
+  },
+    onFailure: function(failure) {
+      alert(failure.errorMessage);
+    }
+  }); 
+  
+  function sendAlert(clientID) {
+    var message = new Messaging.Message("");
+    message.destinationName = "/MQTTMWM/HeartRate/" + clientID + "/alerts";
+    client.send(message);
+  }
+});
+</script>
+  </body>
+</html>
