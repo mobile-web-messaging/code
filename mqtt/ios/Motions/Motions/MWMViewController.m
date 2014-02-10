@@ -1,32 +1,34 @@
 //
 //  MWMViewController.m
-//  HeartBeat
+//  Motions
 //
-//  Created by Jeff Mesnil on 07/02/2014.
+//  Created by Jeff Mesnil on 10/02/2014.
 //  Copyright (c) 2014 Mobile & Web Messaging. All rights reserved.
 //
 
 #import "MWMViewController.h"
-#import <MQTTKit.h>
+#import <MQTTKit/MQTTKit.h>
+#import <CoreMotion/CoreMotion.h>
 
 #define kMqttHost @"test.mosquitto.org"
-#define kHeartRateTopic @"/MQTTMWM/HeartRate/%@"
-#define kAlertTopic @"/MQTTMWM/HeartRate/%@/alerts"
+#define kMotionTopic @"/MQTTMWM/Motions/%@"
+#define kAlertTopic @"/MQTTMWM/Motions/%@/alerts"
 
 @interface MWMViewController () <MQTTClientDelegate>
 
 @property (weak, nonatomic) IBOutlet UILabel *clientIDLabel;
-@property (weak, nonatomic) IBOutlet UILabel *rateLabel;
+@property (weak, nonatomic) IBOutlet UILabel *pitchLabel;
+@property (weak, nonatomic) IBOutlet UILabel *rollLabel;
+@property (weak, nonatomic) IBOutlet UILabel *yawLabel;
+
 @property (strong, nonatomic) MQTTClient *mqttClient;
 @property (strong, nonatomic) NSString *clientID;
+
+@property (strong, nonatomic) CMMotionManager *motionManager;
 
 @end
 
 @implementation MWMViewController
-
-NSTimer *rateTimer;
-// initialize the current rate at 70bpm
-NSInteger currentRate = 70;
 
 - (void)viewDidLoad
 {
@@ -36,34 +38,27 @@ NSInteger currentRate = 70;
     NSLog(@"Client identifier is %@", self.clientID);
     self.clientIDLabel.text = self.clientID;
     
-    // get a weak reference of self to avoid a retain/release cycle
-    // between the controller and the timer
-    __weak id weakSelf = self;
-    rateTimer = [NSTimer scheduledTimerWithTimeInterval:2.0f
-                                                 target:weakSelf
-                                               selector:@selector(heartbeat:)
-                                               userInfo:nil
-                                                repeats:YES];
+    self.motionManager = [[CMMotionManager alloc] init];
+    self.motionManager.deviceMotionUpdateInterval = 0.5;
+    NSOperationQueue *queue = [[NSOperationQueue alloc] init];
+    [self.motionManager startDeviceMotionUpdatesToQueue:queue withHandler:^(CMDeviceMotion *motion, NSError *error) {
+        if(!error) {
+            [self send:motion.attitude];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                self.pitchLabel.text = [NSString stringWithFormat:@"pitch: %.1f", motion.attitude.pitch];
+                self.rollLabel.text = [NSString stringWithFormat:@"roll: %.1f", motion.attitude.roll];
+                self.yawLabel.text = [NSString stringWithFormat:@"yaw: %.1f", motion.attitude.yaw];
+            });
+        }
+    }];
     [self connect];
 }
 
 - (void)dealloc
 {
-    [rateTimer invalidate];
+    [self.motionManager stopDeviceMotionUpdates];
     [self unsubscribe];
     [self disconnect];
-}
-
-#pragma mark - Heart beat simulator
-
-- (void) heartbeat:(NSTimer *)timer
-{
-    // use a low pass filter with a random to change the heart beat
-    float factor = 0.1;
-    NSInteger newValue = 80 - arc4random_uniform(20);
-    currentRate = floor(newValue * factor + currentRate * (1 - factor));
-    self.rateLabel.text = [NSString stringWithFormat:@"%ld\nbpm", (long)currentRate];
-    [self send:currentRate];
 }
 
 #pragma mark - MQTT actions
@@ -85,7 +80,7 @@ NSInteger currentRate = 70;
 {
     NSString *alertTopic = [NSString stringWithFormat:kAlertTopic, self.clientID];
     [self.mqttClient subscribe:alertTopic
-              withQos:0];
+                       withQos:0];
 }
 
 - (void)unsubscribe
@@ -94,10 +89,20 @@ NSInteger currentRate = 70;
     [self.mqttClient unsubscribe:alertTopic];
 }
 
-- (void)send:(NSInteger)rate
+- (void)send:(CMAttitude *)attitude
 {
-    [self.mqttClient publishString:[NSString stringWithFormat:@"%ld", (long)rate]
-                           toTopic:[NSString stringWithFormat:kHeartRateTopic, self.clientID]
+    NSDictionary *dict = @{
+                           @"p": [NSNumber numberWithDouble:attitude.pitch],
+                           @"y": [NSNumber numberWithDouble:attitude.yaw],
+                           @"r": [NSNumber numberWithDouble:attitude.roll],
+                           };
+    // create a JSON string from this dictionary
+    NSData *data = [NSJSONSerialization dataWithJSONObject:dict options:0 error:nil];
+    NSString *message =[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    
+    NSLog(@"message %@", message);
+    [self.mqttClient publishString:message
+                           toTopic:[NSString stringWithFormat:kMotionTopic, self.clientID]
                            withQos:0
                             retain:NO];
 }

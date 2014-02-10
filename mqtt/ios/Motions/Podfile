@@ -1,4 +1,4 @@
-xcodeproj 'HeartBeat.xcodeproj'
+xcodeproj 'Motions.xcodeproj'
 
 pod 'MQTTKit', :git => 'https://github.com/jmesnil/MQTTKit.git'
 

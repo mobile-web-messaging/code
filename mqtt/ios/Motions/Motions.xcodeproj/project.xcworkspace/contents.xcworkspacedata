@@ -2,6 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "self:HeartBeat.xcodeproj">
+      location = "self:Motions.xcodeproj">
    </FileRef>
 </Workspace>

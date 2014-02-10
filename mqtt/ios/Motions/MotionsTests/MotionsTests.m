@@ -1,18 +1,18 @@
 //
-//  HeartBeatTests.m
-//  HeartBeatTests
+//  MotionsTests.m
+//  MotionsTests
 //
-//  Created by Jeff Mesnil on 07/02/2014.
+//  Created by Jeff Mesnil on 10/02/2014.
 //  Copyright (c) 2014 Mobile & Web Messaging. All rights reserved.
 //
 
 #import <XCTest/XCTest.h>
 
-@interface HeartBeatTests : XCTestCase
+@interface MotionsTests : XCTestCase
 
 @end
 
-@implementation HeartBeatTests
+@implementation MotionsTests
 
 - (void)setUp
 {

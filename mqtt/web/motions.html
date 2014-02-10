@@ -3,12 +3,11 @@
 <head>
   <meta content="width=device-width" name="viewport">
   <meta charset="utf-8">
-  <title>HeartBeat - MQTT Example</title>
+  <title>Motions - MQTT Example</title>
   <link rel="stylesheet" type="text/css" href="http://bgrins.github.com/spectrum/spectrum.css">
-  
 </head>
 <body>
-  <h1>HeartBeat - MQTT Example</h1>
+  <h1>Motions - MQTT Example</h1>
   
   <h2>Clients</h2>
   <ul id="heartbeats">
@@ -38,7 +37,7 @@ $(document).ready(function() {
   // subscription callback
   client.onMessageArrived = function(message) {
     var clientID = message.destinationName.split("/").pop();
-    var newValue = message.payloadString;
+    var newValue = JSON.parse(message.payloadString);
 
     var values = clients[clientID];
     // if the clientID is not known, create the UI for it
@@ -49,32 +48,61 @@ $(document).ready(function() {
           $('<button>').text("Alert!").click(function() {
             sendAlert(clientID);
           }),
-          $('<span>').attr('class', 'rate')
+          $('<br>'),
+          $('<div>').attr('class', 'rate')
         )
       );
       // create an empty array to hold its values
-      values = [];
+      values = {
+        "pitch" : [],
+        "roll" : [],
+        "yaw" : [],        
+      };
     }    
     // add the new value at the end of the array
-    values.push(newValue);
-    // keep only the 30 more recent values
-    if (values.length > 30) {
-      values.splice(0,1);      
+    values.pitch.push(newValue.p);
+    values.roll.push(newValue.r);
+    values.yaw.push(newValue.y);
+    // keep only the 50 more recent values
+    if (values.pitch.length > 50) {
+      values.pitch.splice(0,1); 
+      values.roll.splice(0,1); 
+      values.yaw.splice(0,1); 
     }
     // put back the updated values in the clients map
     clients[clientID] = values;
     // display the values as a sparkline
-    $('#heartbeats #'+ clientID + ' .rate').sparkline(values, {
-      width: values.length * 5,
-      type: 'line',
-      tooltipSuffix: ' beats per minute'
+    $('#heartbeats #'+ clientID + ' .rate').sparkline(values.pitch, {
+      width: values.pitch.length * 5,
+      tooltipPrefix: "pitch:",
+      lineColor: 'red',
+      fillColor: false,
+      chartRangeMin: -3,
+      chartRangeMax: 3,
+      height: '36px'
+    });
+    $('#heartbeats #'+ clientID + ' .rate').sparkline(values.roll, {
+      tooltipPrefix: "roll:",
+      lineColor: 'green',
+      composite: true,
+      fillColor: false,
+      chartRangeMin: -3,
+      chartRangeMax: 3
+    });
+    $('#heartbeats #'+ clientID + ' .rate').sparkline(values.yaw, {
+      tooltipPrefix: "yaw:",
+      lineColor: 'blue',
+      composite: true,
+      fillColor: false,
+      chartRangeMin: -3,
+      chartRangeMax: 3
     });
   };
 
   client.connect({onSuccess: function(frame) {
     // once the client is successfully connected,
     // subscribe to all the heart rate topics
-    client.subscribe("/MQTTMWM/HeartRate/+");
+    client.subscribe("/MQTTMWM/Motions/+");
   },
     onFailure: function(failure) {
       alert(failure.errorMessage);
@@ -83,7 +111,7 @@ $(document).ready(function() {
   
   function sendAlert(clientID) {
     var message = new Messaging.Message("");
-    message.destinationName = "/MQTTMWM/HeartRate/" + clientID + "/alerts";
+    message.destinationName = "/MQTTMWM/Motions/" + clientID + "/alerts";
     client.send(message);
   }
 });
