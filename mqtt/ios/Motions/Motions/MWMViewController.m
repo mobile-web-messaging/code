@@ -16,13 +16,13 @@
 
 @interface MWMViewController () <MQTTClientDelegate>
 
-@property (weak, nonatomic) IBOutlet UILabel *clientIDLabel;
+@property (weak, nonatomic) IBOutlet UILabel *deviceIDLabel;
 @property (weak, nonatomic) IBOutlet UILabel *pitchLabel;
 @property (weak, nonatomic) IBOutlet UILabel *rollLabel;
 @property (weak, nonatomic) IBOutlet UILabel *yawLabel;
 
 @property (strong, nonatomic) MQTTClient *mqttClient;
-@property (strong, nonatomic) NSString *clientID;
+@property (strong, nonatomic) NSString *deviceID;
 
 @property (strong, nonatomic) CMMotionManager *motionManager;
 
@@ -34,12 +34,13 @@
 {
     [super viewDidLoad];
     
-    self.clientID = [UIDevice currentDevice].identifierForVendor.UUIDString;
-    NSLog(@"Client identifier is %@", self.clientID);
-    self.clientIDLabel.text = self.clientID;
+    self.deviceID = [UIDevice currentDevice].identifierForVendor.UUIDString;
+    NSLog(@"Client identifier is %@", self.deviceID);
+    self.deviceIDLabel.text = self.deviceID;
     
     self.motionManager = [[CMMotionManager alloc] init];
-    self.motionManager.deviceMotionUpdateInterval = 0.5;
+    // use a frequency of circa 10Hz to get the device motion updates
+    self.motionManager.deviceMotionUpdateInterval = 0.1;
     NSOperationQueue *queue = [[NSOperationQueue alloc] init];
     [self.motionManager startDeviceMotionUpdatesToQueue:queue withHandler:^(CMDeviceMotion *motion, NSError *error) {
         if(!error) {
@@ -65,7 +66,7 @@
 
 - (void)connect
 {
-    self.mqttClient = [[MQTTClient alloc] initWithClientId:self.clientID];
+    self.mqttClient = [[MQTTClient alloc] initWithClientId:self.deviceID];
     // Override point for customization after application launch.
     self.mqttClient.delegate = self;
     [self.mqttClient connectToHost:kMqttHost];
@@ -78,26 +79,25 @@
 
 - (void)subscribe
 {
-    NSString *alertTopic = [NSString stringWithFormat:kAlertTopic, self.clientID];
+    NSString *alertTopic = [NSString stringWithFormat:kAlertTopic, self.deviceID];
     [self.mqttClient subscribe:alertTopic
                        withQos:0];
 }
 
 - (void)unsubscribe
 {
-    NSString *alertTopic = [NSString stringWithFormat:kAlertTopic, self.clientID];
+    NSString *alertTopic = [NSString stringWithFormat:kAlertTopic, self.deviceID];
     [self.mqttClient unsubscribe:alertTopic];
 }
 
 - (void)send:(CMAttitude *)attitude
 {
-    NSLog(@"attitude: %@", attitude);
     uint64_t values[3] = { CFConvertDoubleHostToSwapped(attitude.pitch).v,
         CFConvertDoubleHostToSwapped(attitude.roll).v,
         CFConvertDoubleHostToSwapped(attitude.yaw).v};
     NSData *data = [NSData dataWithBytes:&values length:sizeof(values)];
     [self.mqttClient publishData:data
-                           toTopic:[NSString stringWithFormat:kMotionTopic, self.clientID]
+                           toTopic:[NSString stringWithFormat:kMotionTopic, self.deviceID]
                            withQos:0
                             retain:NO];
 }
@@ -113,7 +113,7 @@
 
 - (void)client:(MQTTClient *)client didReceiveMessage:(MQTTMessage *)message
 {
-    NSString *alertTopic = [NSString stringWithFormat:kAlertTopic, self.clientID];
+    NSString *alertTopic = [NSString stringWithFormat:kAlertTopic, self.deviceID];
     if ([alertTopic isEqualToString:message.topic]) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [self warnUser];

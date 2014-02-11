@@ -9,8 +9,8 @@
 <body>
   <h1>Motions - MQTT Example</h1>
   
-  <h2>Clients</h2>
-  <ul id="heartbeats">
+  <h2>Devices</h2>
+  <ul id="devices">
   </ul>
 
   <footer>&copy; 2014 <a href="http://mobile-web-messaging.net">Mobile &amp; Web Messaging</a></footer>
@@ -24,7 +24,7 @@ $(document).ready(function() {
   var port = 80;
   var clientID = Math.random().toString(12);
 
-  var clients = {};
+  var devices = {};
 
   var client = new Messaging.Client(host, Number(port), clientID);
 
@@ -36,21 +36,24 @@ $(document).ready(function() {
 
   // subscription callback
   client.onMessageArrived = function(message) {
-    var clientID = message.destinationName.split("/").pop();
+    // get the device's id from the message's destination
+    var deviceID = message.destinationName.split("/").pop();
 
+    // get the device data from the message payload as a byte array
     var data = message.payloadBytes;
+    // use a DataView on the data buffer to get the 3 motions values as double (aka Float64)
     var values = new DataView(data.buffer);
     var pitch = values.getFloat64(data.byteOffset);
     var roll = values.getFloat64(data.byteOffset + Float64Array.BYTES_PER_ELEMENT);
     var yaw = values.getFloat64(data.byteOffset + 2 * Float64Array.BYTES_PER_ELEMENT );
 
-    var values = clients[clientID];
-    // if the clientID is not known, create the UI for it
+    var values = devices[deviceID];
+    // if the device is not known, create the UI for it
     if (!values) {
-      var item = $('#heartbeats').append(
-        $('<li>').attr("id", clientID).append(
-          $('<label>').text(clientID),
-          $('<button>').text("Alert!").click(function() { sendAlert(clientID); }),
+      var item = $('#devices').append(
+        $('<li>').attr("id", deviceID).append(
+          $('<label>').text(deviceID),
+          $('<button>').text("Alert!").click(function() { sendAlert(deviceID); }),
           $('<br>'),
           $('<div>').attr('class', 'rate')
         )
@@ -73,9 +76,9 @@ $(document).ready(function() {
       values.yaw.splice(0,1); 
     }
     // put back the updated values in the clients map
-    clients[clientID] = values;
+    devices[deviceID] = values;
     // display the values as a sparkline
-    $('#heartbeats #'+ clientID + ' .rate').sparkline(values.pitch, {
+    $('#'+ deviceID + ' .rate').sparkline(values.pitch, {
       width: values.pitch.length * 5,
       tooltipPrefix: "pitch:",
       lineColor: 'red',
@@ -84,7 +87,7 @@ $(document).ready(function() {
       chartRangeMax: 3,
       height: '36px'
     });
-    $('#heartbeats #'+ clientID + ' .rate').sparkline(values.roll, {
+    $('#'+ deviceID + ' .rate').sparkline(values.roll, {
       tooltipPrefix: "roll:",
       lineColor: 'green',
       composite: true,
@@ -92,7 +95,7 @@ $(document).ready(function() {
       chartRangeMin: -3,
       chartRangeMax: 3
     });
-    $('#heartbeats #'+ clientID + ' .rate').sparkline(values.yaw, {
+    $('#'+ deviceID + ' .rate').sparkline(values.yaw, {
       tooltipPrefix: "yaw:",
       lineColor: 'blue',
       composite: true,
@@ -104,7 +107,7 @@ $(document).ready(function() {
 
   client.connect({onSuccess: function(frame) {
     // once the client is successfully connected,
-    // subscribe to all the heart rate topics
+    // subscribe to all the motions topics
     client.subscribe("/MQTTMWM/Motions/+");
   },
     onFailure: function(failure) {
@@ -112,9 +115,10 @@ $(document).ready(function() {
     }
   }); 
   
-  function sendAlert(clientID) {
+  function sendAlert(deviceID) {
+    // create a message with an empty payload
     var message = new Messaging.Message("");
-    message.destinationName = "/MQTTMWM/Motions/" + clientID + "/alerts";
+    message.destinationName = "/MQTTMWM/Motions/" + deviceID + "/alerts";
     client.send(message);
   }
 });
