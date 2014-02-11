@@ -20,7 +20,7 @@
   <script src="http://omnipotent.net/jquery.sparkline/2.1.2/jquery.sparkline.min.js"></script>
   <script>
 $(document).ready(function() {
-  var host = "test.mosquitto.org";
+  var host = "iot.eclipse.org";
   var port = 80;
   var clientID = Math.random().toString(12);
 
@@ -30,7 +30,7 @@ $(document).ready(function() {
 
   client.onConnectionLost = function(response) {
     if (response.errorCode !== 0) {
-      alert(client.clientId + ": " + response.errorCode + "\n");
+      alert(response.errorMessage + "\nclientID = " + client.clientID + " [" + response.errorCode + "]\n");
     }
   };            
 

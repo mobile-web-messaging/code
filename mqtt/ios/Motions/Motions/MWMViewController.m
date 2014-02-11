@@ -10,7 +10,7 @@
 #import <MQTTKit/MQTTKit.h>
 #import <CoreMotion/CoreMotion.h>
 
-#define kMqttHost @"test.mosquitto.org"
+#define kMqttHost @"iot.eclipse.org"
 #define kMotionTopic @"/MQTTMWM/Motions/%@"
 #define kAlertTopic @"/MQTTMWM/Motions/%@/alerts"
 
