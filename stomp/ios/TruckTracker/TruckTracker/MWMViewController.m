@@ -15,13 +15,13 @@
 
 @interface MWMViewController () <CLLocationManagerDelegate, UITableViewDataSource, UITableViewDelegate>
 
-@property (weak, nonatomic) IBOutlet UILabel *truckIDLabel;
+@property (weak, nonatomic) IBOutlet UILabel *deviceIDLabel;
 @property (weak, nonatomic) IBOutlet UILabel *currentPositionLabel;
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 
 @property (nonatomic, strong) CLLocationManager *locationManager;
 
-@property (nonatomic, copy) NSString *truckID;
+@property (nonatomic, copy) NSString *deviceID;
 
 @property (nonatomic, strong) STOMPClient *client;
 
@@ -29,25 +29,25 @@
 
 @implementation MWMViewController
 
-// the orders are stored in an array of NSString.
-NSMutableArray *orders;
+// the texts are stored in an array of NSString.
+NSMutableArray *texts;
 STOMPSubscription *subscription;
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
 
-    //self.truckID = [UIDevice currentDevice].identifierForVendor.UUIDString;
-    self.truckID = @"66284AB0-C266-4A4D-9443-FEFB5774FA3C";
-    NSLog(@"Truck identifier is %@", self.truckID);
+    //deviceID = [UIDevice currentDevice].identifierForVendor.UUIDString;
+    self.deviceID = @"66284AB0-C266-4A4D-9443-FEFB5774FA3C";
+    NSLog(@"deviceID identifier is %@", self.deviceID);
     self.client = [[STOMPClient alloc] initWithHost:kHost port:kPort];
     
-    orders = [[NSMutableArray alloc] init];
+    texts = [[NSMutableArray alloc] init];
 }
 
 - (void)viewWillAppear:(BOOL)animated
 {
-    self.truckIDLabel.text = self.truckID;
+    self.deviceIDLabel.text = self.deviceID;
     
     [self startUpdatingCurrentLocation];
     [self connect];
@@ -136,7 +136,7 @@ STOMPSubscription *subscription;
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    return [orders count];
+    return [texts count];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView
@@ -148,7 +148,7 @@ STOMPSubscription *subscription;
     
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
     
-    cell.textLabel.text = [orders objectAtIndex:indexPath.row];
+    cell.textLabel.text = [texts objectAtIndex:indexPath.row];
     return cell;
 }
 
@@ -157,7 +157,7 @@ STOMPSubscription *subscription;
 - (void)connect
 {
     NSLog(@"Connecting...");
-    [self.client connectWithHeaders:@{ @"client-id": self.truckID}
+    [self.client connectWithHeaders:@{ @"client-id": self.deviceID}
                   completionHandler:^(STOMPFrame *connectedFrame, NSError *error) {
                       if (error) {
                           // We have not been able to connect to the broker.
@@ -197,11 +197,11 @@ STOMPSubscription *subscription;
     });
 
     // send the message to the truck's topic
-    NSString *destination = [NSString stringWithFormat:@"/topic/truck.%@.position", self.truckID];
+    NSString *destination = [NSString stringWithFormat:@"/topic/device.%@.location", self.deviceID];
 
     // build a dictionary containing all the information to send
     NSDictionary *dict = @{
-        @"truck": self.truckID,
+        @"deviceID": self.deviceID,
         @"lat": [NSNumber numberWithDouble:location.coordinate.latitude],
         @"lng": [NSNumber numberWithDouble:location.coordinate.longitude],
         @"ts": [dateFormatter stringFromDate:location.timestamp]
@@ -222,8 +222,8 @@ STOMPSubscription *subscription;
 
 - (void)subscribe
 {
-    // susbscribes to the truck's orders queue:
-    NSString *destination = [NSString stringWithFormat:@"/queue/truck.%@.orders", self.truckID];
+    // susbscribes to the device text queue:
+    NSString *destination = [NSString stringWithFormat:@"/queue/device.%@.text", self.deviceID];
     
     NSLog(@"subscribing to %@", destination);
     subscription = [self.client subscribeTo:destination
@@ -231,13 +231,9 @@ STOMPSubscription *subscription;
                              messageHandler:^(STOMPMessage *message) {
         // called every time a message is consumed from the orders destination
         NSLog(@"received message %@", message);
-        NSData *data = [message.body dataUsingEncoding:NSUTF8StringEncoding];
-        NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:data
-                                                             options:NSJSONReadingMutableContainers
-                                                               error:nil];
-        NSString *order = dict[@"order"];
-        NSLog(@"adding order = %@", order);
-        [orders addObject:order];
+        NSString *text = message.body;
+        NSLog(@"adding text = %@", text);
+        [texts addObject:text];
         dispatch_async(dispatch_get_main_queue(), ^{
             [self.tableView reloadData];
         });
