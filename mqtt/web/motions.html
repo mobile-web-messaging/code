@@ -37,7 +37,12 @@ $(document).ready(function() {
   // subscription callback
   client.onMessageArrived = function(message) {
     var clientID = message.destinationName.split("/").pop();
-    var newValue = JSON.parse(message.payloadString);
+
+    var data = message.payloadBytes;
+    var values = new DataView(data.buffer);
+    var pitch = values.getFloat64(data.byteOffset);
+    var roll = values.getFloat64(data.byteOffset + Float64Array.BYTES_PER_ELEMENT);
+    var yaw = values.getFloat64(data.byteOffset + 2 * Float64Array.BYTES_PER_ELEMENT );
 
     var values = clients[clientID];
     // if the clientID is not known, create the UI for it
@@ -45,9 +50,7 @@ $(document).ready(function() {
       var item = $('#heartbeats').append(
         $('<li>').attr("id", clientID).append(
           $('<label>').text(clientID),
-          $('<button>').text("Alert!").click(function() {
-            sendAlert(clientID);
-          }),
+          $('<button>').text("Alert!").click(function() { sendAlert(clientID); }),
           $('<br>'),
           $('<div>').attr('class', 'rate')
         )
@@ -60,9 +63,9 @@ $(document).ready(function() {
       };
     }    
     // add the new value at the end of the array
-    values.pitch.push(newValue.p);
-    values.roll.push(newValue.r);
-    values.yaw.push(newValue.y);
+    values.pitch.push(pitch);
+    values.roll.push(roll);
+    values.yaw.push(yaw);
     // keep only the 50 more recent values
     if (values.pitch.length > 50) {
       values.pitch.splice(0,1); 

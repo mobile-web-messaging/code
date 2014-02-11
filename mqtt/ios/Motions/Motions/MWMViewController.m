@@ -91,17 +91,12 @@
 
 - (void)send:(CMAttitude *)attitude
 {
-    NSDictionary *dict = @{
-                           @"p": [NSNumber numberWithDouble:attitude.pitch],
-                           @"y": [NSNumber numberWithDouble:attitude.yaw],
-                           @"r": [NSNumber numberWithDouble:attitude.roll],
-                           };
-    // create a JSON string from this dictionary
-    NSData *data = [NSJSONSerialization dataWithJSONObject:dict options:0 error:nil];
-    NSString *message =[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    
-    NSLog(@"message %@", message);
-    [self.mqttClient publishString:message
+    NSLog(@"attitude: %@", attitude);
+    uint64_t values[3] = { CFConvertDoubleHostToSwapped(attitude.pitch).v,
+        CFConvertDoubleHostToSwapped(attitude.roll).v,
+        CFConvertDoubleHostToSwapped(attitude.yaw).v};
+    NSData *data = [NSData dataWithBytes:&values length:sizeof(values)];
+    [self.mqttClient publishData:data
                            toTopic:[NSString stringWithFormat:kMotionTopic, self.clientID]
                            withQos:0
                             retain:NO];
