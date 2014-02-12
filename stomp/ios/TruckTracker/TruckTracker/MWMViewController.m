@@ -229,8 +229,9 @@ STOMPSubscription *subscription;
     subscription = [self.client subscribeTo:destination
                                     headers:@{}
                              messageHandler:^(STOMPMessage *message) {
-        // called every time a message is consumed from the orders destination
+        // called every time a message is consumed from the text destination
         NSLog(@"received message %@", message);
+        // the text is send in a plain String, we use it as is.
         NSString *text = message.body;
         NSLog(@"adding text = %@", text);
         [texts addObject:text];

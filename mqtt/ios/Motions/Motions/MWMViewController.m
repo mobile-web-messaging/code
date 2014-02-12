@@ -116,7 +116,7 @@
     NSString *alertTopic = [NSString stringWithFormat:kAlertTopic, self.deviceID];
     if ([alertTopic isEqualToString:message.topic]) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self warnUser];
+            [self warnUser:message.payloadString];
         });
     }
 }
@@ -124,7 +124,7 @@
 # pragma mark - UI Actions
 
 // Warn the user by changing the view's background color to red for 2 seconds
-- (void)warnUser
+- (void)warnUser:(NSString *)colorStr
 {
     // keep a reference to the original color
     UIColor *originalColor = self.view.backgroundColor;
@@ -133,8 +133,15 @@
                           delay:0.0
                         options:0
                      animations:^{
-                         // change it to red
-                         self.view.backgroundColor = [UIColor redColor];
+                         // change it to the color passed in parameter
+                         SEL sel = NSSelectorFromString([NSString stringWithFormat:@"%@Color", colorStr]);
+                         UIColor* color = nil;
+                         if ([UIColor respondsToSelector:sel]) {
+                             color  = [UIColor performSelector:sel];
+                         } else {
+                             color = [UIColor redColor];
+                         }
+                         self.view.backgroundColor = color;
                      }
                      completion:^(BOOL finished) {
                          // after a delay of 2 seconds, revert it to the original color
