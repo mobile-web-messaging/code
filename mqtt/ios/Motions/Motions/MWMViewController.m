@@ -11,8 +11,8 @@
 #import <CoreMotion/CoreMotion.h>
 
 #define kMqttHost @"iot.eclipse.org"
-#define kMotionTopic @"/MQTTMWM/Motions/%@"
-#define kAlertTopic @"/MQTTMWM/Motions/%@/alerts"
+#define kMotionTopic @"/mwm/%@/motion"
+#define kAlertTopic @"/mwm/%@/alert"
 
 @interface MWMViewController () <MQTTClientDelegate>
 

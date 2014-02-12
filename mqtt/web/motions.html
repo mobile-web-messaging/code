@@ -37,7 +37,7 @@ $(document).ready(function() {
   // subscription callback
   client.onMessageArrived = function(message) {
     // get the device's id from the message's destination
-    var deviceID = message.destinationName.split("/").pop();
+    var deviceID = message.destinationName.split("/")[2];
 
     // get the device data from the message payload as a byte array
     var data = message.payloadBytes;
@@ -108,7 +108,7 @@ $(document).ready(function() {
   client.connect({onSuccess: function(frame) {
     // once the client is successfully connected,
     // subscribe to all the motions topics
-    client.subscribe("/MQTTMWM/Motions/+");
+    client.subscribe("/mwm/+/motion");
   },
     onFailure: function(failure) {
       alert(failure.errorMessage);
@@ -118,7 +118,7 @@ $(document).ready(function() {
   function sendAlert(deviceID) {
     // create a message with an empty payload
     var message = new Messaging.Message("red");
-    message.destinationName = "/MQTTMWM/Motions/" + deviceID + "/alerts";
+    message.destinationName = "/mwm/" + deviceID + "/alert";
     client.send(message);
   }
 });
