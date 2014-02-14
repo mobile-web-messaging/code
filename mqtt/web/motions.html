@@ -4,11 +4,10 @@
   <meta content="width=device-width" name="viewport">
   <meta charset="utf-8">
   <title>Motions - MQTT Example</title>
-  <link rel="stylesheet" type="text/css" href="http://bgrins.github.com/spectrum/spectrum.css">
 </head>
 <body>
   <h1>Motions - MQTT Example</h1>
-  
+
   <h2>Devices</h2>
   <ul id="devices">
   </ul>
@@ -16,8 +15,8 @@
   <footer>&copy; 2014 <a href="http://mobile-web-messaging.net">Mobile &amp; Web Messaging</a></footer>
 
   <script src='mqttws31.js'></script>
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
-  <script src="http://omnipotent.net/jquery.sparkline/2.1.2/jquery.sparkline.min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery-sparklines/2.1.2/jquery.sparkline.min.js"></script>
   <script>
 $(document).ready(function() {
   var host = "iot.eclipse.org";
@@ -32,7 +31,16 @@ $(document).ready(function() {
     if (response.errorCode !== 0) {
       alert(response.errorMessage + "\nclientID = " + client.clientID + " [" + response.errorCode + "]\n");
     }
-  };            
+  };
+  client.connect({onSuccess: function(frame) {
+    // once the client is successfully connected,
+    // subscribe to all the motions topics
+    client.subscribe("/mwm/+/motion");
+  },
+    onFailure: function(failure) {
+      alert(failure.errorMessage);
+    }
+  });
 
   // subscription callback
   client.onMessageArrived = function(message) {
@@ -47,40 +55,45 @@ $(document).ready(function() {
     var roll = values.getFloat64(data.byteOffset + Float64Array.BYTES_PER_ELEMENT);
     var yaw = values.getFloat64(data.byteOffset + 2 * Float64Array.BYTES_PER_ELEMENT );
 
+    updateSparklines(deviceID, pitch, roll, yaw);
+  };
+
+  function updateSparklines(deviceID, pitch, yaw, roll) {
     var values = devices[deviceID];
-    // if the device is not known, create the UI for it
+    // if the device is not known, create the HTML elements for it
     if (!values) {
-      var item = $('#devices').append(
-        $('<li>').attr("id", deviceID).append(
-          $('<label>').text(deviceID),
-          $('<button>').text("Alert!").click(function() { sendAlert(deviceID); }),
-          $('<br>'),
-          $('<div>').attr('class', 'rate')
-        )
-      );
+      var newDevice = "<li id='" + deviceID + "'><label>" + deviceID + "</label>" +
+      "<button>Alert!</button><br>" +
+      "<div class='rate'></div>";
+      $('#devices').append(newDevice);
+      $("#" + deviceID + " button").click(function() {
+        sendAlert(deviceID);
+      });
       // create an empty array to hold its values
       values = {
         "pitch" : [],
         "roll" : [],
-        "yaw" : [],        
+        "yaw" : [],
       };
-    }    
-    // add the new value at the end of the array
+    }
+    // add the new value at the end of the 3 arrays
     values.pitch.push(pitch);
     values.roll.push(roll);
     values.yaw.push(yaw);
     // keep only the 50 more recent values
     if (values.pitch.length > 50) {
-      values.pitch.splice(0,1); 
-      values.roll.splice(0,1); 
-      values.yaw.splice(0,1); 
+      values.pitch.splice(0,1);
+      values.roll.splice(0,1);
+      values.yaw.splice(0,1);
     }
-    // put back the updated values in the clients map
+    // put back the updated values in the devices map
     devices[deviceID] = values;
-    // display the values as a sparkline
+    // display the values as 3 sparklines in the "rate" <div>
+    // of the device ID
     $('#'+ deviceID + ' .rate').sparkline(values.pitch, {
       width: values.pitch.length * 5,
       tooltipPrefix: "pitch:",
+      // pitch is displayed in red
       lineColor: 'red',
       fillColor: false,
       chartRangeMin: -3,
@@ -89,6 +102,7 @@ $(document).ready(function() {
     });
     $('#'+ deviceID + ' .rate').sparkline(values.roll, {
       tooltipPrefix: "roll:",
+      // pitch is displayed in green
       lineColor: 'green',
       composite: true,
       fillColor: false,
@@ -97,24 +111,15 @@ $(document).ready(function() {
     });
     $('#'+ deviceID + ' .rate').sparkline(values.yaw, {
       tooltipPrefix: "yaw:",
+      // yaw is displayed in blue
       lineColor: 'blue',
       composite: true,
       fillColor: false,
       chartRangeMin: -3,
       chartRangeMax: 3
     });
-  };
+  }
 
-  client.connect({onSuccess: function(frame) {
-    // once the client is successfully connected,
-    // subscribe to all the motions topics
-    client.subscribe("/mwm/+/motion");
-  },
-    onFailure: function(failure) {
-      alert(failure.errorMessage);
-    }
-  }); 
-  
   function sendAlert(deviceID) {
     // create a message with an empty payload
     var message = new Messaging.Message("red");

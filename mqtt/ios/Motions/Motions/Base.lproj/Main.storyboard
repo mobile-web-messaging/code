@@ -1,66 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="4514" systemVersion="13B42" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="vXZ-lx-hvc">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="4451" systemVersion="13A461" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="vXZ-lx-hvc">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="3747"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="3676"/>
     </dependencies>
     <scenes>
-        <!--View Controller-->
+        <!--class Prefix:identifier View Controller-->
         <scene sceneID="ufC-wZ-h7g">
             <objects>
                 <viewController id="vXZ-lx-hvc" customClass="MWMViewController" sceneMemberID="viewController">
-                    <layoutGuides>
-                        <viewControllerLayoutGuide type="top" id="608-0d-4AK"/>
-                        <viewControllerLayoutGuide type="bottom" id="LCA-kR-Z5L"/>
-                    </layoutGuides>
                     <view key="view" contentMode="scaleToFill" id="kh9-bI-dsS">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <subviews>
-                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="device ID" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="u25-ko-SP4">
-                                <rect key="frame" x="132" y="28" width="57" height="16"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="13"/>
-                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="pitch" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="1jc-PQ-X2q">
-                                <rect key="frame" x="141" y="82" width="39" height="21"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="roll" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="afh-OJ-WX9">
-                                <rect key="frame" x="149" y="111" width="23" height="21"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="yaw" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="zcx-Gj-kCD">
-                                <rect key="frame" x="145" y="140" width="31" height="21"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                        </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
-                        <constraints>
-                            <constraint firstAttribute="centerX" secondItem="u25-ko-SP4" secondAttribute="centerX" id="0mX-1w-1iZ"/>
-                            <constraint firstAttribute="centerX" secondItem="afh-OJ-WX9" secondAttribute="centerX" id="5GK-Ko-SFK"/>
-                            <constraint firstItem="u25-ko-SP4" firstAttribute="top" secondItem="608-0d-4AK" secondAttribute="bottom" constant="20" symbolic="YES" id="5tS-Of-3J4"/>
-                            <constraint firstAttribute="centerX" secondItem="afh-OJ-WX9" secondAttribute="centerX" id="DPM-yp-8ac"/>
-                            <constraint firstItem="zcx-Gj-kCD" firstAttribute="top" secondItem="afh-OJ-WX9" secondAttribute="bottom" constant="8" symbolic="YES" id="Exf-Zd-bX9"/>
-                            <constraint firstItem="afh-OJ-WX9" firstAttribute="top" secondItem="1jc-PQ-X2q" secondAttribute="bottom" constant="8" symbolic="YES" id="OZm-1p-rHp"/>
-                            <constraint firstItem="1jc-PQ-X2q" firstAttribute="top" secondItem="608-0d-4AK" secondAttribute="bottom" constant="62" id="Vfv-Rm-LpY"/>
-                            <constraint firstAttribute="centerX" secondItem="zcx-Gj-kCD" secondAttribute="centerX" id="gDL-F7-H2P"/>
-                            <constraint firstAttribute="centerX" secondItem="1jc-PQ-X2q" secondAttribute="centerX" id="qKj-6R-D2a"/>
-                        </constraints>
                     </view>
-                    <connections>
-                        <outlet property="deviceIDLabel" destination="u25-ko-SP4" id="TFW-DK-5zJ"/>
-                        <outlet property="pitchLabel" destination="1jc-PQ-X2q" id="NXm-2H-vlp"/>
-                        <outlet property="rollLabel" destination="afh-OJ-WX9" id="8as-0b-JiR"/>
-                        <outlet property="yawLabel" destination="zcx-Gj-kCD" id="cCf-TB-nZg"/>
-                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="x5A-6p-PRh" sceneMemberID="firstResponder"/>
             </objects>
