@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3674C9FAD1364072936CD136 /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DED0FE9EE64641BF96C915FF /* libPods.a */; };
 		93E768DD18AE22A20066AA42 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 93E768DC18AE22A20066AA42 /* Foundation.framework */; };
 		93E768DF18AE22A20066AA42 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 93E768DE18AE22A20066AA42 /* CoreGraphics.framework */; };
 		93E768E118AE22A20066AA42 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 93E768E018AE22A20066AA42 /* UIKit.framework */; };
@@ -34,6 +35,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		473A726F1A2E4CA68C7ACC39 /* Pods.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.xcconfig; path = Pods/Pods.xcconfig; sourceTree = "<group>"; };
 		93E768D918AE22A20066AA42 /* Motions.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Motions.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		93E768DC18AE22A20066AA42 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		93E768DE18AE22A20066AA42 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -53,6 +55,7 @@
 		93E7690318AE22A20066AA42 /* MotionsTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "MotionsTests-Info.plist"; sourceTree = "<group>"; };
 		93E7690518AE22A20066AA42 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		93E7690718AE22A20066AA42 /* MotionsTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MotionsTests.m; sourceTree = "<group>"; };
+		DED0FE9EE64641BF96C915FF /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -63,6 +66,7 @@
 				93E768DF18AE22A20066AA42 /* CoreGraphics.framework in Frameworks */,
 				93E768E118AE22A20066AA42 /* UIKit.framework in Frameworks */,
 				93E768DD18AE22A20066AA42 /* Foundation.framework in Frameworks */,
+				3674C9FAD1364072936CD136 /* libPods.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -86,6 +90,7 @@
 				93E7690118AE22A20066AA42 /* MotionsTests */,
 				93E768DB18AE22A20066AA42 /* Frameworks */,
 				93E768DA18AE22A20066AA42 /* Products */,
+				473A726F1A2E4CA68C7ACC39 /* Pods.xcconfig */,
 			);
 			sourceTree = "<group>";
 		};
@@ -105,6 +110,7 @@
 				93E768DE18AE22A20066AA42 /* CoreGraphics.framework */,
 				93E768E018AE22A20066AA42 /* UIKit.framework */,
 				93E768FB18AE22A20066AA42 /* XCTest.framework */,
+				DED0FE9EE64641BF96C915FF /* libPods.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -159,9 +165,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 93E7690B18AE22A20066AA42 /* Build configuration list for PBXNativeTarget "Motions" */;
 			buildPhases = (
+				5AF8B94DA97B4DE385039BA5 /* Check Pods Manifest.lock */,
 				93E768D518AE22A20066AA42 /* Sources */,
 				93E768D618AE22A20066AA42 /* Frameworks */,
 				93E768D718AE22A20066AA42 /* Resources */,
+				ED7516C49D6441129BF2A90C /* Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -200,6 +208,9 @@
 				LastUpgradeCheck = 0500;
 				ORGANIZATIONNAME = "Mobile & Web Messaging";
 				TargetAttributes = {
+					93E768D818AE22A20066AA42 = {
+						DevelopmentTeam = 4FM5RU4TX3;
+					};
 					93E768F918AE22A20066AA42 = {
 						TestTargetID = 93E768D818AE22A20066AA42;
 					};
@@ -244,6 +255,39 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		5AF8B94DA97B4DE385039BA5 /* Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Check Pods Manifest.lock";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+		ED7516C49D6441129BF2A90C /* Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Pods-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		93E768D518AE22A20066AA42 /* Sources */ = {
@@ -376,26 +420,34 @@
 		};
 		93E7690C18AE22A20066AA42 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 473A726F1A2E4CA68C7ACC39 /* Pods.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Motions/Motions-Prefix.pch";
 				INFOPLIST_FILE = "Motions/Motions-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
 		};
 		93E7690D18AE22A20066AA42 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 473A726F1A2E4CA68C7ACC39 /* Pods.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Motions/Motions-Prefix.pch";
 				INFOPLIST_FILE = "Motions/Motions-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
@@ -461,6 +513,7 @@
 				93E7690D18AE22A20066AA42 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		93E7690E18AE22A20066AA42 /* Build configuration list for PBXNativeTarget "MotionsTests" */ = {
 			isa = XCConfigurationList;
@@ -469,6 +522,7 @@
 				93E7691018AE22A20066AA42 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
