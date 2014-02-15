@@ -14,7 +14,7 @@
 #define kMotionTopic @"/mwm/%@/motion"
 #define kAlertTopic @"/mwm/%@/alert"
 
-@interface MWMViewController () <MQTTClientDelegate>
+@interface MWMViewController ()
 
 @property (weak, nonatomic) IBOutlet UILabel *deviceIDLabel;
 @property (weak, nonatomic) IBOutlet UILabel *pitchLabel;
@@ -53,10 +53,19 @@
             });
         }
     }];
-    self.mqttClient = [[MQTTClient alloc] initWithClientId:self.deviceID];
-    // Override point for customization after application launch.
-    self.mqttClient.delegate = self;
 
+    self.mqttClient = [[MQTTClient alloc] initWithClientId:self.deviceID];
+
+    // use a weak reference to avoid a retain/release cycle in the block
+    __weak MWMViewController *weakSelf = self;
+    [self.mqttClient setMessageHandler:^(MQTTMessage *message) {
+        NSString *alertTopic = [NSString stringWithFormat:kAlertTopic, weakSelf.deviceID];
+        if ([alertTopic isEqualToString:message.topic]) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [weakSelf warnUser:message.payloadString];
+            });
+        }
+    }];
     [self connect];
 }
 
@@ -71,25 +80,34 @@
 
 - (void)connect
 {
-    [self.mqttClient connectToHost:kMqttHost];
+    [self.mqttClient connectToHost:kMqttHost completionHandler:^(NSUInteger code) {
+        NSLog(@"connected to the MQTT broker");
+        // once connect, subscribe to the client's alerts topic
+        [self subscribe];
+    }];
 }
 
 - (void)disconnect
 {
-    [self.mqttClient disconnect];
+    [self.mqttClient disconnectWithCompletionHandler:^(NSUInteger code) {
+        NSLog(@"disconnected from the MQTT broker");
+    }];
 }
 
 - (void)subscribe
 {
     NSString *alertTopic = [NSString stringWithFormat:kAlertTopic, self.deviceID];
     [self.mqttClient subscribe:alertTopic
-                       withQos:0];
+                       withQos:AtLeastOnce
+             completionHandler:^(NSArray *grantedQos) {
+        NSLog(@"subscribed to topic %@", alertTopic );
+    }];
 }
 
 - (void)unsubscribe
 {
     NSString *alertTopic = [NSString stringWithFormat:kAlertTopic, self.deviceID];
-    [self.mqttClient unsubscribe:alertTopic];
+    [self.mqttClient unsubscribe:alertTopic withCompletionHandler:nil];
 }
 
 - (void)send:(CMAttitude *)attitude
@@ -103,26 +121,8 @@
     [self.mqttClient publishData:data
                          toTopic:[NSString stringWithFormat:kMotionTopic, self.deviceID]
                          withQos:0
-                          retain:NO];
-}
-
-#pragma mark - MQTTClientDelegate
-
-- (void)client:(MQTTClient *)client
-    didConnect:(NSUInteger)code
-{
-    // once connect, subscribe to the client's alerts topic
-    [self subscribe];
-}
-
-- (void)client:(MQTTClient *)client didReceiveMessage:(MQTTMessage *)message
-{
-    NSString *alertTopic = [NSString stringWithFormat:kAlertTopic, self.deviceID];
-    if ([alertTopic isEqualToString:message.topic]) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self warnUser:message.payloadString];
-        });
-    }
+                          retain:NO
+               completionHandler:nil];
 }
 
 # pragma mark - UI Actions
