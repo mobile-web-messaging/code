@@ -2,13 +2,9 @@ PODS:
   - MQTTKit (0.1.0)
 
 DEPENDENCIES:
-  - MQTTKit (from `https://github.com/jmesnil/MQTTKit.git`)
-
-EXTERNAL SOURCES:
-  MQTTKit:
-    :git: https://github.com/jmesnil/MQTTKit.git
+  - MQTTKit (~> 0.1.0)
 
 SPEC CHECKSUMS:
-  MQTTKit: b788c2a420487cb95a8b89e02a40a14701b9ba90
+  MQTTKit: a87710ddb10b6dc845bb89d0dfbca18d4911240e
 
 COCOAPODS: 0.29.0

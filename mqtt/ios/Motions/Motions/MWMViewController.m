@@ -80,10 +80,14 @@
 
 - (void)connect
 {
-    [self.mqttClient connectToHost:kMqttHost completionHandler:^(NSUInteger code) {
-        NSLog(@"connected to the MQTT broker");
-        // once connect, subscribe to the client's alerts topic
-        [self subscribe];
+    [self.mqttClient connectToHost:kMqttHost completionHandler:^(MQTTConnectionReturnCode code) {
+        if (code == ConnectionAccepted) {
+            NSLog(@"connected to the MQTT broker");
+            // once connect, subscribe to the client's alerts topic
+            [self subscribe];
+        } else {
+            NSLog(@"Failed to connect to the MQTT broker: code=%i", code);
+        }
     }];
 }
 
