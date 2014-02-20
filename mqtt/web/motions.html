@@ -64,7 +64,7 @@ $(document).ready(function() {
     if (!values) {
       var newDevice = "<li id='" + deviceID + "'><label>" + deviceID + "</label>" +
       "<button>Alert!</button><br>" +
-      "<div class='rate'></div>";
+      "<div class='data'></div>";
       $('#devices').append(newDevice);
       $("#" + deviceID + " button").click(function() {
         sendAlert(deviceID);
@@ -88,9 +88,9 @@ $(document).ready(function() {
     }
     // put back the updated values in the devices map
     devices[deviceID] = values;
-    // display the values as 3 sparklines in the "rate" <div>
+    // display the values as 3 sparklines in the "data" <div>
     // of the device ID
-    $('#'+ deviceID + ' .rate').sparkline(values.pitch, {
+    $('#'+ deviceID + ' .data').sparkline(values.pitch, {
       width: values.pitch.length * 5,
       tooltipPrefix: "pitch:",
       // pitch is displayed in red
@@ -100,7 +100,7 @@ $(document).ready(function() {
       chartRangeMax: 3,
       height: '36px'
     });
-    $('#'+ deviceID + ' .rate').sparkline(values.roll, {
+    $('#'+ deviceID + ' .data').sparkline(values.roll, {
       tooltipPrefix: "roll:",
       // pitch is displayed in green
       lineColor: 'green',
@@ -109,7 +109,7 @@ $(document).ready(function() {
       chartRangeMin: -3,
       chartRangeMax: 3
     });
-    $('#'+ deviceID + ' .rate').sparkline(values.yaw, {
+    $('#'+ deviceID + ' .data').sparkline(values.yaw, {
       tooltipPrefix: "yaw:",
       // yaw is displayed in blue
       lineColor: 'blue',
