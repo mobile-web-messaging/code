@@ -1,0 +1,5 @@
+xcodeproj 'Locations.xcodeproj'
+
+pod 'StompKit', '~> 0.1'
+
+platform :ios, '5.0'

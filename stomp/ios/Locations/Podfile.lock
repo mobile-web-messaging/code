@@ -1,0 +1,13 @@
+PODS:
+  - CocoaAsyncSocket (7.3.2)
+  - StompKit (0.1.0):
+    - CocoaAsyncSocket (= 7.3.2)
+
+DEPENDENCIES:
+  - StompKit (~> 0.1)
+
+SPEC CHECKSUMS:
+  CocoaAsyncSocket: 977404129ec8505fee1c3701956b769e3bb10ea7
+  StompKit: 0aa2e0e042eac2fad23a622f13ef7f3b34608c22
+
+COCOAPODS: 0.29.0
