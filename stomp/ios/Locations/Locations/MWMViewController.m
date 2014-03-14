@@ -13,10 +13,11 @@
 #define kHost     @"192.168.1.25"
 #define kPort     61613
 
-@interface MWMViewController () <CLLocationManagerDelegate>
+@interface MWMViewController () <CLLocationManagerDelegate, UITableViewDataSource, UITableViewDelegate>
 
 @property (weak, nonatomic) IBOutlet UILabel *deviceIDLabel;
 @property (weak, nonatomic) IBOutlet UILabel *currentPositionLabel;
+@property (weak, nonatomic) IBOutlet UITableView *tableView;
 
 @property (copy, nonatomic) NSString *deviceID;
 
@@ -27,6 +28,10 @@
 
 @implementation MWMViewController
 
+// the texts are stored in an array of NSString.
+NSMutableArray *texts;
+STOMPSubscription *subscription;
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];
@@ -36,6 +41,8 @@
     NSLog(@"Device identifier is %@", self.deviceID);
 
     self.client = [[STOMPClient alloc] initWithHost:kHost port:kPort];
+
+    texts = [[NSMutableArray alloc] init];
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -49,6 +56,7 @@
 - (void)viewDidDisappear:(BOOL)animated
 {
     [self stopUpdatingCurrentLocation];
+    [subscription unsubscribe];
     [self disconnect];
 }
 
@@ -128,6 +136,7 @@
                       } else {
                           // we are connected to the STOMP broker without an error
                           NSLog(@"Connected");
+                          [self subscribe];
                       }
                   }];
     // when the method returns, we can not assume that the client is connected
@@ -158,7 +167,7 @@
     });
     
     // send the message to the truck's topic
-    NSString *destination = [NSString stringWithFormat:@"/topic/device.%@.position", self.deviceID];
+    NSString *destination = [NSString stringWithFormat:@"/topic/device.%@.location", self.deviceID];
     
     // build a dictionary containing all the information to send
     NSDictionary *dict = @{
@@ -179,6 +188,51 @@
     [self.client sendTo:destination
                 headers:headers
                    body:body];
+}
+
+- (void)subscribe
+{
+    // susbscribes to the device text queue:
+    NSString *destination = [NSString stringWithFormat:@"/queue/device.%@.text", self.deviceID];
+    
+    NSLog(@"subscribing to %@", destination);
+    subscription = [self.client subscribeTo:destination
+                                    headers:@{}
+                             messageHandler:^(STOMPMessage *message) {
+        // called every time a message is consumed from the destination
+        NSLog(@"received message %@", message);
+        // the text is send in a plain String, we use it as is.
+        NSString *text = message.body;
+        NSLog(@"adding text = %@", text);
+        [texts addObject:text];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.tableView reloadData];
+        });
+    }];
+}
+
+#pragma mark - UITableViewDelegate protocol
+
+// no delegate actions
+
+#pragma mark - UITableViewDataSource protocol
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return [texts count];
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    // this identifier must be the same that was set in the
+    // Table View Cell properties in the story board.
+    static NSString *CellIdentifier = @"TextCell";
+    
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    
+    cell.textLabel.text = [texts objectAtIndex:indexPath.row];
+    return cell;
 }
 
 @end

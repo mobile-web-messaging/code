@@ -1,5 +1,5 @@
 xcodeproj 'Locations.xcodeproj'
 
-pod 'StompKit', '~> 0.1'
+pod 'StompKit', :git => 'https://github.com/mobile-web-messaging/StompKit.git'
 
 platform :ios, '5.0'

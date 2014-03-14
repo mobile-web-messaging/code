@@ -1,13 +1,17 @@
 PODS:
-  - CocoaAsyncSocket (7.3.2)
-  - StompKit (0.1.0):
-    - CocoaAsyncSocket (= 7.3.2)
+  - CocoaAsyncSocket (7.3.4)
+  - StompKit (0.1.1):
+    - CocoaAsyncSocket (= 7.3.4)
 
 DEPENDENCIES:
-  - StompKit (~> 0.1)
+  - StompKit (from `https://github.com/mobile-web-messaging/StompKit.git`)
+
+EXTERNAL SOURCES:
+  StompKit:
+    :git: https://github.com/mobile-web-messaging/StompKit.git
 
 SPEC CHECKSUMS:
-  CocoaAsyncSocket: 977404129ec8505fee1c3701956b769e3bb10ea7
-  StompKit: 0aa2e0e042eac2fad23a622f13ef7f3b34608c22
+  CocoaAsyncSocket: 534d09416f992fd51efb23f534742ce70b3a7999
+  StompKit: b4cba9575a50fb61a405b8336412418ce84d5073
 
 COCOAPODS: 0.29.0
