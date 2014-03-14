@@ -1,10 +1,14 @@
 PODS:
-  - MQTTKit (0.1.0)
+  - MQTTKit (0.1.0-next)
 
 DEPENDENCIES:
-  - MQTTKit (~> 0.1.0)
+  - MQTTKit (from `https://github.com/mobile-web-messaging/MQTTKit.git`)
+
+EXTERNAL SOURCES:
+  MQTTKit:
+    :git: https://github.com/mobile-web-messaging/MQTTKit.git
 
 SPEC CHECKSUMS:
-  MQTTKit: a87710ddb10b6dc845bb89d0dfbca18d4911240e
+  MQTTKit: 2f4b24d88806759171aeef65c30c4b8bdd58fd60
 
 COCOAPODS: 0.29.0
