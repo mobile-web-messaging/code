@@ -2,16 +2,15 @@
 //  MWMViewController.m
 //  Motions
 //
-//  Created by Jeff Mesnil on 10/02/2014.
+//  Created by Jeff Mesnil on 14/03/2014.
 //  Copyright (c) 2014 Mobile & Web Messaging. All rights reserved.
 //
 
 #import "MWMViewController.h"
-#import <MQTTKit/MQTTKit.h>
 #import <CoreMotion/CoreMotion.h>
+#import <MQTTKit/MQTTKit.h>
 
 #define kMqttHost @"iot.eclipse.org"
-#define kMotionTopic @"/mwm/%@/motion"
 #define kAlertTopic @"/mwm/%@/alert"
 
 @interface MWMViewController ()
@@ -21,11 +20,10 @@
 @property (weak, nonatomic) IBOutlet UILabel *rollLabel;
 @property (weak, nonatomic) IBOutlet UILabel *yawLabel;
 
-@property (strong, nonatomic) MQTTClient *mqttClient;
 @property (strong, nonatomic) NSString *deviceID;
 
 @property (strong, nonatomic) CMMotionManager *motionManager;
-
+@property (strong, nonatomic) MQTTClient *client;
 @end
 
 @implementation MWMViewController
@@ -33,39 +31,41 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    
+
     self.deviceID = [UIDevice currentDevice].identifierForVendor.UUIDString;
-    //self.deviceID = @"C0962483-7DD9-43CC-B1A0-2E7FBFC05060";
+    self.deviceID = @"C0962483-7DD9-43CC-B1A0-2E7FBFC05060";
     NSLog(@"Device identifier is %@", self.deviceID);
     self.deviceIDLabel.text = self.deviceID;
-    
+
     self.motionManager = [[CMMotionManager alloc] init];
-    // use a frequency of circa 10Hz to get the device motion updates
-    self.motionManager.deviceMotionUpdateInterval = 0.1;
+    // get the device motion updates every second.
+    self.motionManager.deviceMotionUpdateInterval = 1;
     NSOperationQueue *queue = [[NSOperationQueue alloc] init];
     [self.motionManager startDeviceMotionUpdatesToQueue:queue withHandler:^(CMDeviceMotion *motion, NSError *error) {
         if(!error) {
-            [self send:motion.attitude];
+            CMAttitude *attitude = motion.attitude;
             dispatch_async(dispatch_get_main_queue(), ^{
-                self.pitchLabel.text = [NSString stringWithFormat:@"pitch: %.1f", motion.attitude.pitch];
-                self.rollLabel.text = [NSString stringWithFormat:@"roll: %.1f", motion.attitude.roll];
-                self.yawLabel.text = [NSString stringWithFormat:@"yaw: %.1f", motion.attitude.yaw];
+                self.pitchLabel.text = [NSString stringWithFormat:@"pitch: %.1f", attitude.pitch];
+                self.rollLabel.text = [NSString stringWithFormat:@"roll: %.1f", attitude.roll];
+                self.yawLabel.text = [NSString stringWithFormat:@"yaw: %.1f", attitude.yaw];
             });
+            [self send:attitude];
         }
     }];
-
-    self.mqttClient = [[MQTTClient alloc] initWithClientId:self.deviceID];
-
+    
+    self.client = [[MQTTClient alloc] initWithClientId:self.deviceID];
     // use a weak reference to avoid a retain/release cycle in the block
     __weak MWMViewController *weakSelf = self;
-    [self.mqttClient setMessageHandler:^(MQTTMessage *message) {
+    self.client.messageHandler = ^(MQTTMessage *message) {
         NSString *alertTopic = [NSString stringWithFormat:kAlertTopic, weakSelf.deviceID];
         if ([alertTopic isEqualToString:message.topic]) {
+            NSString *color = message.payloadString;
             dispatch_async(dispatch_get_main_queue(), ^{
-                [weakSelf warnUser:message.payloadString];
+                [weakSelf warnUser:color];
             });
         }
-    }];
+    };
+    
     [self connect];
 }
 
@@ -76,42 +76,31 @@
     [self disconnect];
 }
 
-#pragma mark - MQTT actions
+#pragma mark - MQTTKit Actions
 
 - (void)connect
 {
-    [self.mqttClient connectToHost:kMqttHost completionHandler:^(MQTTConnectionReturnCode code) {
+    NSLog(@"Connecting to %@...", kMqttHost);
+    [self.client connectToHost:kMqttHost
+             completionHandler:^(MQTTConnectionReturnCode code) {
         if (code == ConnectionAccepted) {
             NSLog(@"connected to the MQTT broker");
-            // once connect, subscribe to the client's alerts topic
             [self subscribe];
         } else {
-            NSLog(@"Failed to connect to the MQTT broker: code=%i", code);
+            NSLog(@"Failed to connect to the MQTT broker: code=%lu", code);
         }
     }];
 }
 
 - (void)disconnect
 {
-    [self.mqttClient disconnectWithCompletionHandler:^(NSUInteger code) {
-        NSLog(@"disconnected from the MQTT broker");
+    [self.client disconnectWithCompletionHandler:^(NSUInteger code) {
+        if (code == 0) {
+            NSLog(@"disconnected from the MQTT broker");
+        } else {
+            NSLog(@"disconnected unexpectedly...");
+        }
     }];
-}
-
-- (void)subscribe
-{
-    NSString *alertTopic = [NSString stringWithFormat:kAlertTopic, self.deviceID];
-    [self.mqttClient subscribe:alertTopic
-                       withQos:AtLeastOnce
-             completionHandler:^(NSArray *grantedQos) {
-        NSLog(@"subscribed to topic %@", alertTopic );
-    }];
-}
-
-- (void)unsubscribe
-{
-    NSString *alertTopic = [NSString stringWithFormat:kAlertTopic, self.deviceID];
-    [self.mqttClient unsubscribe:alertTopic withCompletionHandler:nil];
 }
 
 - (void)send:(CMAttitude *)attitude
@@ -122,16 +111,31 @@
         CFConvertDoubleHostToSwapped(attitude.yaw).v
     };
     NSData *data = [NSData dataWithBytes:&values length:sizeof(values)];
-    [self.mqttClient publishData:data
-                         toTopic:[NSString stringWithFormat:kMotionTopic, self.deviceID]
-                         withQos:0
-                          retain:NO
-               completionHandler:nil];
+    NSString *topic =[NSString stringWithFormat:@"/mwm/%@/motion", self.deviceID];
+    [self.client publishData:data
+                     toTopic:topic
+                     withQos:AtMostOnce
+                      retain:YES
+           completionHandler:nil];
+}
+
+- (void)subscribe
+{
+    NSString *topic = [NSString stringWithFormat:kAlertTopic, self.deviceID];
+    [self.client subscribe:topic withQos:AtLeastOnce completionHandler:^(NSArray *grantedQos) {
+        NSLog(@"subscribed to %@ with QoS %@", topic, grantedQos);
+    }];
+}
+
+- (void)unsubscribe
+{
+    NSString *topic = [NSString stringWithFormat:kAlertTopic, self.deviceID];
+    [self.client unsubscribe:topic withCompletionHandler:nil];
 }
 
 # pragma mark - UI Actions
 
-// Warn the user by changing the view's background color to red for 2 seconds
+// Warn the user by changing the view's background color to the specified color during 2 seconds
 - (void)warnUser:(NSString *)colorStr
 {
     // keep a reference to the original color
