@@ -159,6 +159,7 @@ STOMPSubscription *subscription;
     // when the method returns, we can not assume that the client is connected
 }
 
+
 - (void)disconnect
 {
     NSLog(@"Disconnecting...");
@@ -226,6 +227,52 @@ STOMPSubscription *subscription;
             [self.tableView reloadData];
         });
     }];
+}
+
+-(void)ack
+{
+    NSString *destination = @"";
+
+    // use client acknowledgement
+    [self.client subscribeTo:destination
+                     headers:@{kHeaderAck: kAckClient}
+              messageHandler:^(STOMPMessage *message) {
+                  // process the message
+                  // ...
+
+                  // acknowledge it
+                  [message ack];
+                  // or nack it with
+                  // [message nack]
+              }];
+}
+
+- (void)transaction
+{
+    NSString *destination = @"";
+    NSString *body = @"";
+
+    // begin a transaction
+    STOMPTransaction *transaction = [self.client begin];
+    // or STOMPTransaction *transaction = [self.client begin:mytxid];
+    NSLog(@"started transaction %@", transaction.identifier);
+
+    // send message inside a transaction
+    [self.client sendTo:destination
+                headers:@{kHeaderTransaction: transaction.identifier}
+                   body:body];
+
+    STOMPMessage *message;
+
+    // acknowledge a message inside a transaction
+    [message ack:@{kHeaderTransaction: transaction.identifier}];
+    // or nack a message inside a transaction with
+    // [message nack:@{kHeaderTransaction: transaction.identifier}];
+
+    // commit the transaction
+    [transaction commit];
+    // or abort it
+    [transaction abort];
 }
 
 #pragma mark - UITableViewDelegate protocol

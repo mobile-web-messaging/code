@@ -32,6 +32,10 @@ $(document).ready(function() {
       alert(response.errorMessage + "\nclientID = " + client.clientID + " [" + response.errorCode + "]\n");
     }
   };
+  var willMessage = new Messaging.Message("Web client " + clientID + " has unexpectedly died");
+  willMessage.destinationName = "/mwm/lastWill";
+  willMessage.qos = 1; // at least once
+  willMessage.retained = false;
   client.connect({onSuccess: function(frame) {
     // once the client is successfully connected,
     // subscribe to all the motions topics
@@ -39,7 +43,8 @@ $(document).ready(function() {
   },
     onFailure: function(failure) {
       alert(failure.errorMessage);
-    }
+    },
+    willMessage: willMessage
   });
 
   // subscription callback

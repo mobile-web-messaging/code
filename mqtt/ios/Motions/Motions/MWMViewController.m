@@ -59,6 +59,7 @@
     }];
     
     self.client = [[MQTTClient alloc] initWithClientId:self.deviceID];
+
     // use a weak reference to avoid a retain/release cycle in the block
     __weak MWMViewController *weakSelf = self;
     self.client.messageHandler = ^(MQTTMessage *message) {
@@ -92,7 +93,7 @@
             NSLog(@"connected to the MQTT broker");
             [self subscribe];
         } else {
-            NSLog(@"Failed to connect to the MQTT broker: code=%lu", code);
+            NSLog(@"Failed to connect to the MQTT broker: code=%lu", (unsigned long)code);
         }
     }];
 }
@@ -106,6 +107,27 @@
             NSLog(@"disconnected unexpectedly...");
         }
     }];
+}
+
+- (void)setWill
+{
+    self.client.keepAlive = 5;
+    self.client.disconnectionHandler = ^(NSUInteger code) {
+        NSLog(@"unexpected disconnection %lu", (unsigned long)code);
+    };
+
+    NSString *willTopic = @"/mwm/lastWill";
+    NSString *willMessage = [NSString stringWithFormat:@"Device %@ has unexpectedly died", self.deviceID];
+    [self.client setWill:willMessage
+                 toTopic:willTopic
+                 withQos:ExactlyOnce
+                  retain:NO];
+
+    // connect after having set the client's last will
+    [self.client connectToHost:kMqttHost
+             completionHandler:^(MQTTConnectionReturnCode code) {
+                 //...
+             }];
 }
 
 - (void)send:(CMAttitude *)attitude
