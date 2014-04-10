@@ -86,6 +86,7 @@
 
 - (void)connect
 {
+    [self setLastWill];
     NSLog(@"Connecting to %@...", kMqttHost);
     [self.client connectToHost:kMqttHost
              completionHandler:^(MQTTConnectionReturnCode code) {
@@ -109,25 +110,16 @@
     }];
 }
 
-- (void)setWill
+- (void)setLastWill
 {
-    self.client.keepAlive = 5;
-    self.client.disconnectionHandler = ^(NSUInteger code) {
-        NSLog(@"unexpected disconnection %lu", (unsigned long)code);
-    };
-
     NSString *willTopic = @"/mwm/lastWill";
-    NSString *willMessage = [NSString stringWithFormat:@"Device %@ has unexpectedly died", self.deviceID];
-    [self.client setWill:willMessage
+    NSDictionary *dict = @{ @"deviceID": self.deviceID};
+    NSData *willData = [NSJSONSerialization dataWithJSONObject:dict options:0 error:nil];
+
+    [self.client setWillData:willData
                  toTopic:willTopic
                  withQos:ExactlyOnce
                   retain:NO];
-
-    // connect after having set the client's last will
-    [self.client connectToHost:kMqttHost
-             completionHandler:^(MQTTConnectionReturnCode code) {
-                 //...
-             }];
 }
 
 - (void)send:(CMAttitude *)attitude

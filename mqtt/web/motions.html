@@ -21,6 +21,7 @@
 $(document).ready(function() {
   var host = "iot.eclipse.org";
   var port = 80;
+  var lastWillTopic = "/mwm/lastWill";
   var clientID = Math.random().toString(12);
 
   var devices = {};
@@ -33,13 +34,15 @@ $(document).ready(function() {
     }
   };
   var willMessage = new Messaging.Message("Web client " + clientID + " has unexpectedly died");
-  willMessage.destinationName = "/mwm/lastWill";
-  willMessage.qos = 1; // at least once
+  willMessage.destinationName = "/mwm/lastWill/web";
+  willMessage.qos = 2; // exactly once
   willMessage.retained = false;
   client.connect({onSuccess: function(frame) {
     // once the client is successfully connected,
     // subscribe to all the motions topics
     client.subscribe("/mwm/+/motion");
+    // subscribe to the last will topic too:
+    client.subscribe(lastWillTopic);
   },
     onFailure: function(failure) {
       alert(failure.errorMessage);
@@ -49,6 +52,11 @@ $(document).ready(function() {
 
   // subscription callback
   client.onMessageArrived = function(message) {
+    if (message.destinationName === lastWillTopic) {
+      var payload = JSON.parse(message.payloadString);
+      discard(payload.deviceID);
+      return;
+    }
     // get the device's id from the message's destination
     var deviceID = message.destinationName.split("/")[2];
 
@@ -62,6 +70,12 @@ $(document).ready(function() {
 
     updateSparklines(deviceID, pitch, roll, yaw);
   };
+
+  function discard(deviceID) {
+    console.log("discard data for " + deviceID);
+    delete devices[deviceID];
+    $('#'+ deviceID).remove();
+  }
 
   function updateSparklines(deviceID, pitch, yaw, roll) {
     var values = devices[deviceID];
