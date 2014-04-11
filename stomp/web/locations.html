@@ -124,6 +124,10 @@ $(document).ready(function() {
 
     // create the STOMP client
     client = Stomp.client(url);
+    // will send a heartbeat at most every 20 seconds
+    client.heartbeat.outgoing = 20000;
+    // expects broker's heartbeat at least every minute
+    client.heartbeat.incoming = 60000;
     // and connects to the STOMP broker
     client.connect({}, connectedCallback);
   }

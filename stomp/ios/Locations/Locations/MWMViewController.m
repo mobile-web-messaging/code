@@ -10,7 +10,7 @@
 #import <CoreLocation/CoreLocation.h>
 #import <StompKit.h>
 
-#define kHost     @"192.168.1.25"
+#define kHost     @"jeff.local"
 #define kPort     61613
 
 @interface MWMViewController () <CLLocationManagerDelegate, UITableViewDataSource, UITableViewDelegate>
@@ -144,7 +144,14 @@ STOMPSubscription *subscription;
 - (void)connect
 {
     NSLog(@"Connecting...");
-    [self.client connectWithHeaders:@{ @"client-id": self.deviceID}
+    self.client.errorHandler = ^(NSError* error) {
+        NSLog(@"got error from STOMP: %@", error);
+    };
+    // will send a heartbeat at most every minute.
+    // expect broker's heartbeat at least every 20 seconds.
+    NSString *heartbeat = @"60000,20000";
+    [self.client connectWithHeaders:@{ @"client-id": self.deviceID,
+                                       kHeaderHeartBeat: heartbeat }
                   completionHandler:^(STOMPFrame *connectedFrame, NSError *error) {
                       if (error) {
                           // We have not been able to connect to the broker.
