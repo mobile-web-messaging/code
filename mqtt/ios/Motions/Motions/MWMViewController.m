@@ -58,7 +58,8 @@
         }
     }];
     
-    self.client = [[MQTTClient alloc] initWithClientId:self.deviceID];
+    self.client = [[MQTTClient alloc] initWithClientId:self.deviceID
+                                          cleanSession:NO];
 
     // use a weak reference to avoid a retain/release cycle in the block
     __weak MWMViewController *weakSelf = self;

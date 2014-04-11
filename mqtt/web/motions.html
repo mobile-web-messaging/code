@@ -47,14 +47,15 @@ $(document).ready(function() {
     onFailure: function(failure) {
       alert(failure.errorMessage);
     },
-    willMessage: willMessage
+    willMessage: willMessage,
+    cleanSession: true
   });
 
   // subscription callback
   client.onMessageArrived = function(message) {
     if (message.destinationName === lastWillTopic) {
       var payload = JSON.parse(message.payloadString);
-      discard(payload.deviceID);
+      //discard(payload.deviceID);
       return;
     }
     // get the device's id from the message's destination
@@ -143,6 +144,7 @@ $(document).ready(function() {
     // create a message with an empty payload
     var message = new Messaging.Message("red");
     message.destinationName = "/mwm/" + deviceID + "/alert";
+    message.qos = 1;
     client.send(message);
   }
 });
