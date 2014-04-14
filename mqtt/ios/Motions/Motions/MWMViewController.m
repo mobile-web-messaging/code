@@ -41,13 +41,18 @@
     // get the device motion updates every second.
     self.motionManager.deviceMotionUpdateInterval = 1;
     NSOperationQueue *queue = [[NSOperationQueue alloc] init];
-    [self.motionManager startDeviceMotionUpdatesToQueue:queue withHandler:^(CMDeviceMotion *motion, NSError *error) {
+    [self.motionManager startDeviceMotionUpdatesToQueue:queue
+                                            withHandler:^(CMDeviceMotion *motion, NSError *error) {
         if(!error) {
             CMAttitude *attitude = motion.attitude;
             dispatch_async(dispatch_get_main_queue(), ^{
-                self.pitchLabel.text = [NSString stringWithFormat:@"pitch: %.1f", attitude.pitch];
-                self.rollLabel.text = [NSString stringWithFormat:@"roll: %.1f", attitude.roll];
-                self.yawLabel.text = [NSString stringWithFormat:@"yaw: %.1f", attitude.yaw];
+                // convert values from radians to degrees
+                double pitch = attitude.pitch * 180 / M_PI;
+                double roll = attitude.roll * 180 / M_PI;
+                double yaw = attitude.yaw * 180 / M_PI;
+                self.pitchLabel.text = [NSString stringWithFormat:@"pitch: %.0f°", pitch];
+                self.rollLabel.text = [NSString stringWithFormat:@"roll: %.0f°", roll];
+                self.yawLabel.text = [NSString stringWithFormat:@"yaw: %.0f°", yaw];
             });
             [self send:attitude];
         }
