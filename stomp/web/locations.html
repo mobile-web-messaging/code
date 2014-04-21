@@ -107,6 +107,14 @@ $(document).ready(function() {
       // we use a wildcard destination to register to any
       // destination that matches this pattern.
       var destination = "/topic/device.*.location";
+
+      var receipt = "receipt_" + destination;
+      client.onreceipt = function(frame) {
+        var receiptID = frame.headers['receipt-id'];
+        if (receipt === receiptID) {
+          console.log("subscribed to " + destination);
+        }
+      }
       client.subscribe(destination, function(message) {
         // this function is called every time a message is received
         // create an object from the JSON string contained in the message body
@@ -119,8 +127,8 @@ $(document).ready(function() {
         }
         // show the device location on the map
         show(deviceID, payload.lat, payload.lng);
-      });
-    };
+      }, {receipt: receipt});
+    });
 
     // create the STOMP client
     client = Stomp.client(url);

@@ -219,10 +219,20 @@ STOMPSubscription *subscription;
 {
     // susbscribes to the device text queue:
     NSString *destination = [NSString stringWithFormat:@"/queue/device.%@.text", self.deviceID];
-    
+
+    // build a receipt identifier
+    NSString *receipt = [NSString stringWithFormat:@"%@-%@", self.deviceID, destination];
+    // set the client's receiptHandler to handle any receipt delivered by the broker
+    self.client.receiptHandler = ^(STOMPFrame *frame) {
+        NSString *receiptID = [frame.headers objectForKey:kHeaderReceiptID];
+        if ([receiptID isEqualToString:receipt]) {
+            NSLog(@"Subscribed to %@", destination);
+        }
+    };
     NSLog(@"subscribing to %@", destination);
+    // pass a receipt header to be informed of the subscription processing
     subscription = [self.client subscribeTo:destination
-                                    headers:@{}
+                                    headers:@{kHeaderReceipt: receipt}
                              messageHandler:^(STOMPMessage *message) {
         // called every time a message is consumed from the destination
         NSLog(@"received message %@", message);
