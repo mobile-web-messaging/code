@@ -9,6 +9,6 @@ EXTERNAL SOURCES:
     :git: https://github.com/mobile-web-messaging/MQTTKit.git
 
 SPEC CHECKSUMS:
-  MQTTKit: 2f4b24d88806759171aeef65c30c4b8bdd58fd60
+  MQTTKit: eca7270c24d16fe7865143d3e86f393f3275c544
 
-COCOAPODS: 0.29.0
+COCOAPODS: 0.32.1
