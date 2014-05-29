@@ -141,11 +141,25 @@ STOMPSubscription *subscription;
 
 #pragma mark - Messaging
 
+- (void)reconnect:(NSError *)error {
+    NSLog(@"got error %@", error);
+    STOMPFrame *frame = error.userInfo[@"frame"];
+    if (frame) {
+        NSString *message = frame.headers[@"message"];
+        NSLog(@"error from the STOMP protocol: %@", message);
+    }
+    [self disconnect];
+    sleep(10);
+    NSLog(@"Reconnecting...");
+    [self connect];
+}
+
 - (void)connect
 {
     NSLog(@"Connecting...");
+    __weak typeof(self) weakSelf = self;
     self.client.errorHandler = ^(NSError* error) {
-        NSLog(@"got error from STOMP: %@", error);
+        [weakSelf reconnect:error];
     };
     // will send a heartbeat at most every minute.
     // expect broker's heartbeat at least every 20 seconds.
@@ -157,6 +171,7 @@ STOMPSubscription *subscription;
                           // We have not been able to connect to the broker.
                           // Let's log the error
                           NSLog(@"Error during connection: %@", error);
+                          [weakSelf reconnect:error];
                       } else {
                           // we are connected to the STOMP broker without an error
                           NSLog(@"Connected");
