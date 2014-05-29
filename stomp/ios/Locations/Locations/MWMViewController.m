@@ -22,6 +22,8 @@
 @property (copy, nonatomic) NSString *deviceID;
 
 @property (strong, nonatomic) CLLocationManager *locationManager;
+@property (strong, nonatomic) CLLocation *lastKnownLocation;
+
 @property (nonatomic, strong) STOMPClient *client;
 
 @end
@@ -106,6 +108,8 @@ STOMPSubscription *subscription;
 
     // send a message with the location data
     [self sendLocation:newLocation];
+    // store the location to send it again when user shakes the device
+    self.lastKnownLocation = newLocation;
 }
 
 - (void)locationManager:(CLLocationManager *)manager
@@ -121,6 +125,19 @@ STOMPSubscription *subscription;
     [alert addButtonWithTitle:@"OK"];
     [alert show];
 }
+
+#pragma mark - User Events
+
+- (void)motionEnded:(UIEventSubtype)motion withEvent:(UIEvent *)event
+{
+    if (motion == UIEventSubtypeMotionShake) {
+        NSLog(@"device is shaked");
+        if (self.lastKnownLocation) {
+            [self sendLocation:self.lastKnownLocation];
+        }
+    }
+}
+
 
 #pragma mark - Messaging
 
