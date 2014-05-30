@@ -26,7 +26,7 @@
         </fieldset>
       </form>
       <hr>
-      
+
       <div id="map-canvas" style="height:512px; width:100%; padding:0; margin:0">
       </div>
 
@@ -35,7 +35,7 @@
       <!-- Scripts placed at the end of the document so the pages load faster -->
       <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
       <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.1/stomp.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.1/stomp.js"></script>
       <script>
 $(document).ready(function() {
   // the STOMP client
@@ -54,7 +54,7 @@ $(document).ready(function() {
 
   // initialize the Google map.
   google.maps.event.addDomListener(window, 'load', initialize);
-      
+
   // show the device at the given latitude and longitude
   function show(deviceID, lat, lng) {
     var position = new google.maps.LatLng(lat, lng);
@@ -87,14 +87,21 @@ $(document).ready(function() {
 
   // Connection to the STOMP broker
   // and subscription to the device's position destinations.
-  $('#connect_form').submit(function() {
-    var url = $("#connect_url").val();
+  //
+  // the url paramater is the Web Socket URL of the STOMP broker
+  function connect(url) {
 
-    // create the STOMP client
-    client = Stomp.client(url);
-
-    client.connect({}, function(frame) {
+    // creates the callback that is called when the client
+    // is successfully connected to the STOMP broker
+    var connectedCallback =  function(frame) {
       client.debug("connected to Stomp");
+      // disable the connect button
+      $("#connect_button").prop("disabled",true);
+      // enable the disconnect button
+      $("#disconnect_button").prop("disabled",false);
+      // show the form to send text to the devices
+      $("#text_form").show();
+
       // once the client is connected, subscribe to the device's location destinations.
 
       // we use a wildcard destination to register to any
@@ -108,18 +115,24 @@ $(document).ready(function() {
         var deviceID = payload.deviceID;
         if (!$("#deviceID option[value='" + deviceID + "']").length) {
           // if the device ID is not already in the list of devices we can send orders to, we add it.
-          $('#deviceID').append($('<option>', {value:deviceID}).text(deviceID));                
+          $('#deviceID').append($('<option>', {value:deviceID}).text(deviceID));
         }
         // show the device location on the map
         show(deviceID, payload.lat, payload.lng);
       });
-    });
-    // disable the connect button
-    $("#connect_button").prop("disabled",true);
-    // enable the disconnect button
-    $("#disconnect_button").prop("disabled",false);
-    // show the form to send text to the devices
-    $("#text_form").show();
+    };
+
+    // create the STOMP client
+    client = Stomp.client(url);
+    // and connects to the STOMP broker
+    client.connect({}, connectedCallback);
+  }
+
+  // handles the connect_form
+  $('#connect_form').submit(function() {
+    var url = $("#connect_url").val();
+
+    connect(url);
     return false;
   });
 
@@ -127,7 +140,7 @@ $(document).ready(function() {
   $('#text_form').submit(function() {
     var deviceID = $("#deviceID").val();
     var text = $("#text").val();
-      
+
     // sue the device's queue orders as the destination
     var destination = "/queue/device." + deviceID + ".text";
     // text is sent as a plain text string
@@ -137,7 +150,7 @@ $(document).ready(function() {
     return false;
   });
 
-  $('#disconnect_button').click(function() {
+  function disconnect() {
     // disconnect from the broker
     client.disconnect(function() {
       // once we are successfully disconnected, clear out all the trackers from the map
@@ -150,6 +163,10 @@ $(document).ready(function() {
     $("#connect_button").prop("disabled",false);
     $("#disconnect_button").prop("disabled",true);
     $("#text_form").hide();
+  }
+
+  $('#disconnect_button').click(function() {
+    disconnect();
     return false;
   });
 });
