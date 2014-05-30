@@ -11,7 +11,7 @@ EXTERNAL SOURCES:
     :git: https://github.com/mobile-web-messaging/StompKit.git
 
 SPEC CHECKSUMS:
-  CocoaAsyncSocket: 534d09416f992fd51efb23f534742ce70b3a7999
+  CocoaAsyncSocket: 6607a16a17ce52c792840e212a6ad07729692765
   StompKit: b4cba9575a50fb61a405b8336412418ce84d5073
 
-COCOAPODS: 0.29.0
+COCOAPODS: 0.32.1
