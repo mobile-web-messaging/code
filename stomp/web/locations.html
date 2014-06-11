@@ -128,7 +128,7 @@ $(document).ready(function() {
         // show the device location on the map
         show(deviceID, payload.lat, payload.lng);
       }, {receipt: receipt});
-    });
+    };
 
     // create the STOMP client
     client = Stomp.client(url);
